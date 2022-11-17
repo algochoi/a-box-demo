@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import json
-
 from pyteal import (
     App,
     Approve,
@@ -44,7 +42,7 @@ router = Router(
     "box-demo",
     # What to do for each on-complete type when no arguments are passed (bare call)
     BareCallActions(
-        no_op=OnCompleteAction.never(),
+        no_op=OnCompleteAction(action=Approve(), call_config=CallConfig.CREATE)
     ),
 )
 
