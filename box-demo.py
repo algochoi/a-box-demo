@@ -13,15 +13,10 @@ from pyteal import (
     Int,
     Itob,
     Log,
-    OnComplete,
     OnCompleteAction,
     Router,
     ScratchVar,
     Seq,
-    Subroutine,
-    TealType,
-    Txn,
-    abi,
     pragma,
 )
 
@@ -83,9 +78,11 @@ def length() -> Expr:
 def delete() -> Expr:
     output = ScratchVar()
     return Seq(
-            App.box_put(Bytes("BoxA"), Bytes("this is a test of a very very very very long string")),
-            Log(Itob(App.box_delete(Bytes("BoxA")))),
-        ) 
+        App.box_put(
+            Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
+        ),
+        Log(Itob(App.box_delete(Bytes("BoxA")))),
+    )
 
 
 if __name__ == "__main__":
