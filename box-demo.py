@@ -1,34 +1,24 @@
 #!/usr/bin/env python3
 
+import json
+
 from pyteal import (
     App,
     Approve,
     Assert,
-    Balance,
     BareCallActions,
     Bytes,
     CallConfig,
     Expr,
-    For,
-    Ge,
-    Global,
-    Gt,
-    If,
-    InnerTxnBuilder,
     Int,
-    Not,
     OnComplete,
     OnCompleteAction,
-    Reject,
-    Return,
     Router,
     ScratchVar,
     Seq,
     Subroutine,
     TealType,
     Txn,
-    TxnField,
-    TxnType,
     abi,
     pragma,
 )
@@ -52,7 +42,7 @@ def create() -> Expr:
     """Create a box"""
     return Seq(
         # 100 byte box created with box_create
-        Assert(App.box_create(Bytes("MyKey"), Int(100)) == Int(1))
+        Assert(App.box_create(Bytes("CreateMyKey"), Int(100)) == Int(1))
     )
 
 
@@ -60,8 +50,28 @@ def create() -> Expr:
 def put() -> Expr:
     return Seq(
         # box created with box_put
-        App.box_put(Bytes("MyKey"), Bytes("My Values")),
+        App.box_put(Bytes("PutMyKey"), Bytes("My Values")),
         Approve(),
+    )
+
+
+@router.method(no_op=CallConfig.CALL)
+def read() -> Expr:
+    return Seq(
+        App.box_put(Bytes("Cnt"), Bytes("Let's read some bytes")),
+        boxint := App.box_get(Bytes("Cnt")),
+        Assert(boxint.hasValue()),
+    )
+
+
+@router.method(no_op=CallConfig.CALL)
+def length() -> Expr:
+    return Seq(
+        App.box_put(
+            Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
+        ),
+        bt := App.box_length(Bytes("BoxA")),
+        Assert(bt.hasValue()),
     )
 
 
@@ -73,3 +83,6 @@ if __name__ == "__main__":
 
     with open("clear-box.teal", "w") as f:
         f.write(clearstate)
+
+    with open("contract.json", "w") as f:
+        f.write(json.dumps(contract.dictify(), indent=4))
