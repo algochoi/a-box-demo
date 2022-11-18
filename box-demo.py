@@ -11,6 +11,8 @@ from pyteal import (
     CallConfig,
     Expr,
     Int,
+    Itob,
+    Log,
     OnComplete,
     OnCompleteAction,
     Router,
@@ -42,7 +44,7 @@ def create() -> Expr:
     """Create a box"""
     return Seq(
         # 100 byte box created with box_create
-        Assert(App.box_create(Bytes("CreateMyKey"), Int(100)) == Int(1))
+        Assert(App.box_create(Bytes("BoxA"), Int(100)) == Int(1))
     )
 
 
@@ -50,7 +52,7 @@ def create() -> Expr:
 def put() -> Expr:
     return Seq(
         # box created with box_put
-        App.box_put(Bytes("PutMyKey"), Bytes("My Values")),
+        App.box_put(Bytes("BoxA"), Bytes("My Values")),
         Approve(),
     )
 
@@ -58,9 +60,10 @@ def put() -> Expr:
 @router.method(no_op=CallConfig.CALL)
 def read() -> Expr:
     return Seq(
-        App.box_put(Bytes("Cnt"), Bytes("Let's read some bytes")),
-        boxint := App.box_get(Bytes("Cnt")),
+        App.box_put(Bytes("BoxA"), Bytes("Let's read some bytes")),
+        boxint := App.box_get(Bytes("BoxA")),
         Assert(boxint.hasValue()),
+        Log(boxint.value()),
     )
 
 
@@ -72,7 +75,17 @@ def length() -> Expr:
         ),
         bt := App.box_length(Bytes("BoxA")),
         Assert(bt.hasValue()),
+        Log(Itob(bt.value())),
     )
+
+
+@router.method(no_op=CallConfig.CALL)
+def delete() -> Expr:
+    output = ScratchVar()
+    return Seq(
+            App.box_put(Bytes("BoxA"), Bytes("this is a test of a very very very very long string")),
+            Log(Itob(App.box_delete(Bytes("BoxA")))),
+        ) 
 
 
 if __name__ == "__main__":

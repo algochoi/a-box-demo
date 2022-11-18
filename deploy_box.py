@@ -17,6 +17,12 @@ def compile_program(client: algod.AlgodClient, source_code: bytes) -> bytes:
     return base64.b64decode(compile_response["result"])
 
 
+# Decodes a logged transaction response
+def decode_return_value(resp):
+    log = resp["logs"]
+    return [base64.b64decode(s).decode() for s in log]
+
+
 # Creates an app and returns the app ID
 def create_test_app() -> int:
     # Declare application state storage (immutable)
@@ -95,24 +101,28 @@ def call_program(app_id: int):
     # Initialize ATC to call ABI methods
     atc = atomic_transaction_composer.AtomicTransactionComposer()
     create_method = abi.Method.from_signature("put()void")
+    read_method = abi.Method.from_signature("read()void")
+    length_method = abi.Method.from_signature("length()void")
     transaction_signer = atomic_transaction_composer.AccountTransactionSigner(
         private_key
     )
 
     atc.add_method_call(
         app_id,
-        create_method,
+        read_method,
         sender,
         client.suggested_params(),
         transaction_signer,
-        boxes=[(0, b"PutMyKey")],
+        boxes=[(0, b"BoxA")],
     )
     resp = atc.execute(client, 5)
     info = client.pending_transaction_info(resp.tx_ids[0])
     print(f"Box Info: {info}")
 
+    # Decoded the returned output and print
+    return_string = decode_return_value(info)
+    print(f"Returned box: {return_string}")
 
-# TODO: Read from box and log value
 
 if __name__ == "__main__":
     id = create_test_app()
