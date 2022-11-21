@@ -19,8 +19,9 @@ def compile_program(client: algod.AlgodClient, source_code: bytes) -> bytes:
 
 # Decodes a logged transaction response
 def decode_return_value(resp):
-    log = resp["logs"]
-    return [base64.b64decode(s).decode() for s in log]
+    if "logs" in resp:
+        log = resp["logs"]
+        return [base64.b64decode(s).decode() for s in log]
 
 
 # Creates an app and returns the app ID
@@ -70,10 +71,10 @@ def create_test_app() -> int:
     client.send_transactions([signed_txn])
 
     transaction_response = transaction.wait_for_confirmation(client, tx_id, 5)
-    print(transaction_response)
+    # print(transaction_response)
     app_id = transaction_response["application-index"]
     algod_response = client.application_info(app_id)
-    print(algod_response)
+    # print(algod_response)
     return app_id
 
 
@@ -96,35 +97,66 @@ def fund_program(app_id: int):
     _ = transaction.wait_for_confirmation(client, tx_id, 5)
 
 
-def call_program(app_id: int):
+def call_box_method(app_id: int, method: abi.Method, box_ref: bytes):
     private_key, sender = sb_account.get_funded_transient(client)
     # Initialize ATC to call ABI methods
     atc = atomic_transaction_composer.AtomicTransactionComposer()
-    create_method = abi.Method.from_signature("put()void")
-    read_method = abi.Method.from_signature("read()void")
-    length_method = abi.Method.from_signature("length()void")
     transaction_signer = atomic_transaction_composer.AccountTransactionSigner(
         private_key
     )
 
     atc.add_method_call(
         app_id,
-        read_method,
+        method,
         sender,
         client.suggested_params(),
         transaction_signer,
-        boxes=[(0, b"BoxA")],
+        boxes=[
+            (0, box_ref)
+        ],  # For the Python SDK, provide a list of (app_id, box_key) tuples you want to access.
     )
     resp = atc.execute(client, 5)
     info = client.pending_transaction_info(resp.tx_ids[0])
-    print(f"Box Info: {info}")
+    print(f"Box Txn Info: {info}")
 
     # Decoded the returned output and print
     return_string = decode_return_value(info)
     print(f"Returned box: {return_string}")
 
 
+def create_box(app_id: int):
+    create_method = abi.Method.from_signature("create()void")
+    print("Creating a box...")
+    call_box_method(app_id, create_method, b"BoxA")
+
+
+def put_box(app_id: int):
+    put_method = abi.Method.from_signature("put()void")
+    print("Write into a box...")
+    call_box_method(app_id, put_method, b"BoxA")
+
+
+def read_box(app_id: int):
+    read_method = abi.Method.from_signature("read()void")
+    print("Read from a box...")
+    call_box_method(app_id, read_method, b"BoxA")
+
+
+def length_box(app_id: int):
+    length_method = abi.Method.from_signature("length()void")
+    print("Get the length of a box...")
+    call_box_method(app_id, length_method, b"BoxA")
+
+
+def delete_box(app_id: int):
+    delete_method = abi.Method.from_signature("delete()void")
+    print("Deleting a box...")
+    call_box_method(app_id, delete_method, b"BoxA")
+
+
 if __name__ == "__main__":
     id = create_test_app()
     fund_program(id)
-    call_program(id)
+    create_box(id)
+    read_box(id)
+    length_box(id)

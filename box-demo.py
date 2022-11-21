@@ -38,8 +38,8 @@ router = Router(
 def create() -> Expr:
     """Create a box"""
     return Seq(
-        # 100 byte box created with box_create
-        Assert(App.box_create(Bytes("BoxA"), Int(100)) == Int(1))
+        # 44 byte box created with box_create
+        Assert(App.box_create(Bytes("BoxA"), Int(44)) == Int(1))
     )
 
 
@@ -47,7 +47,9 @@ def create() -> Expr:
 def put() -> Expr:
     return Seq(
         # box created with box_put
-        App.box_put(Bytes("BoxA"), Bytes("My Values")),
+        App.box_put(
+            Bytes("BoxA"), Bytes("The quick brown fox jumps over the lazy dog.")
+        ),
         Approve(),
     )
 
@@ -55,7 +57,7 @@ def put() -> Expr:
 @router.method(no_op=CallConfig.CALL)
 def read() -> Expr:
     return Seq(
-        App.box_put(Bytes("BoxA"), Bytes("Let's read some bytes")),
+        # App.box_put(Bytes("BoxA"), Bytes("Let's read some bytes")),
         boxint := App.box_get(Bytes("BoxA")),
         Assert(boxint.hasValue()),
         Log(boxint.value()),
@@ -65,9 +67,9 @@ def read() -> Expr:
 @router.method(no_op=CallConfig.CALL)
 def length() -> Expr:
     return Seq(
-        App.box_put(
-            Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
-        ),
+        # App.box_put(
+        #     Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
+        # ),
         bt := App.box_length(Bytes("BoxA")),
         Assert(bt.hasValue()),
         Log(Itob(bt.value())),
