@@ -98,7 +98,7 @@ def fund_program(app_id: int):
     _ = transaction.wait_for_confirmation(client, tx_id, 5)
 
 
-def call_box_method(app_id: int, method: abi.Method, box_ref: bytes):
+def call_box_method(app_id: int, method: abi.Method, box_ref: bytes, args=None):
     private_key, sender = sb_account.get_funded_transient(client)
     # Initialize ATC to call ABI methods
     atc = atomic_transaction_composer.AtomicTransactionComposer()
@@ -112,6 +112,7 @@ def call_box_method(app_id: int, method: abi.Method, box_ref: bytes):
         sender,
         client.suggested_params(),
         transaction_signer,
+        method_args=args if args else [],
         boxes=[
             (0, box_ref)
         ],  # For the Python SDK, provide a list of (app_id, box_key) tuples you want to access.
@@ -129,35 +130,37 @@ def create_box(app_id: int):
     create_method = abi.Method.from_signature("create()void")
     print(">> Creating a box...")
     box_return = call_box_method(app_id, create_method, b"BoxA")
-    print(f"Create box: {decode_return_value(box_return)}")
+    print(f"Create box: {decode_return_value(box_return, isInt=True)}\n")
 
 
 def put_box(app_id: int):
-    put_method = abi.Method.from_signature("put()void")
+    put_method = abi.Method.from_signature("put(string)void")
     print(">> Write into a box...")
-    box_return = call_box_method(app_id, put_method, b"BoxA")
-    print(f"Returned box: {decode_return_value(box_return)}")
+    box_return = call_box_method(
+        app_id, put_method, b"BoxA", ["The quick brown fox jumps over the lazy dog."]
+    )
+    print(f"Returned box: {decode_return_value(box_return)}\n")
 
 
 def read_box(app_id: int):
     read_method = abi.Method.from_signature("read()void")
     print(">> Read from a box...")
     box_return = call_box_method(app_id, read_method, b"BoxA")
-    print(f"Returned box: {decode_return_value(box_return)}")
+    print(f"Returned box: {decode_return_value(box_return)}\n")
 
 
 def length_box(app_id: int):
     length_method = abi.Method.from_signature("length()void")
     print(">> Get the length of a box...")
     box_return = call_box_method(app_id, length_method, b"BoxA")
-    print(f"Length decoded {decode_return_value(box_return, isInt=True)}")
+    print(f"Length decoded {decode_return_value(box_return, isInt=True)}\n")
 
 
 def delete_box(app_id: int):
     delete_method = abi.Method.from_signature("delete()void")
     print(">> Deleting a box...")
     box_return = call_box_method(app_id, delete_method, b"BoxA")
-    print(f"Delete box success: {decode_return_value(box_return, isInt=True)}")
+    print(f"Delete box success: {decode_return_value(box_return, isInt=True)}\n")
 
 
 if __name__ == "__main__":

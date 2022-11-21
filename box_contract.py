@@ -3,6 +3,7 @@
 import json
 
 from pyteal import (
+    abi,
     App,
     Approve,
     Assert,
@@ -15,7 +16,6 @@ from pyteal import (
     Log,
     OnCompleteAction,
     Router,
-    ScratchVar,
     Seq,
     pragma,
 )
@@ -39,23 +39,23 @@ def create() -> Expr:
     """Create a box"""
     return Seq(
         # 44 byte box created with box_create
-        Assert(App.box_create(Bytes("BoxA"), Int(44)) == Int(1))
+        Log(Itob(App.box_create(Bytes("BoxA"), Int(44)))),
     )
 
 
 @router.method(no_op=CallConfig.CALL)
-def put() -> Expr:
+def put(value: abi.String) -> Expr:
+    """Write to a box"""
     return Seq(
         # box created with box_put
-        App.box_put(
-            Bytes("BoxA"), Bytes("The quick brown fox jumps over the lazy dog.")
-        ),
+        App.box_put(Bytes("BoxA"), value.get()),
         Approve(),
     )
 
 
 @router.method(no_op=CallConfig.CALL)
 def read() -> Expr:
+    """Read from a box"""
     return Seq(
         # App.box_put(Bytes("BoxA"), Bytes("Let's read some bytes")),
         boxint := App.box_get(Bytes("BoxA")),
@@ -66,6 +66,7 @@ def read() -> Expr:
 
 @router.method(no_op=CallConfig.CALL)
 def length() -> Expr:
+    """Get the length a box value"""
     return Seq(
         # App.box_put(
         #     Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
@@ -78,7 +79,7 @@ def length() -> Expr:
 
 @router.method(no_op=CallConfig.CALL)
 def delete() -> Expr:
-    output = ScratchVar()
+    """Delete a box"""
     return Seq(
         # App.box_put(
         #     Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
