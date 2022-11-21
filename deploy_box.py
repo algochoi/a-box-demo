@@ -18,9 +18,10 @@ def compile_program(client: algod.AlgodClient, source_code: bytes) -> bytes:
 
 
 # Decodes a logged transaction response
-def decode_return_value(resp):
-    if "logs" in resp:
-        log = resp["logs"]
+def decode_return_value(log, isInt=False):
+    if log:
+        if isInt:
+            return [int.from_bytes(base64.b64decode(s), "big") for s in log]
         return [base64.b64decode(s).decode() for s in log]
 
 
@@ -30,7 +31,7 @@ def create_test_app() -> int:
     local_ints = 1
     local_bytes = 1
     global_ints = 1
-    global_bytes = 0
+    global_bytes = 1
 
     # Define app schema
     global_schema = transaction.StateSchema(global_ints, global_bytes)
@@ -38,8 +39,8 @@ def create_test_app() -> int:
     on_complete = transaction.OnComplete.NoOpOC.real
 
     # Compile the program with algod
-    source_code = ""
-    clear_code = ""
+    source_code = b""
+    clear_code = b""
     with open("approve-box.teal", mode="rb") as file:
         source_code = file.read()
     with open("clear-box.teal", mode="rb") as file:
@@ -120,43 +121,50 @@ def call_box_method(app_id: int, method: abi.Method, box_ref: bytes):
     print(f"Box Txn Info: {info}")
 
     # Decoded the returned output and print
-    return_string = decode_return_value(info)
-    print(f"Returned box: {return_string}")
+    if "logs" in info:
+        return info["logs"]
 
 
 def create_box(app_id: int):
     create_method = abi.Method.from_signature("create()void")
-    print("Creating a box...")
-    call_box_method(app_id, create_method, b"BoxA")
+    print(">> Creating a box...")
+    box_return = call_box_method(app_id, create_method, b"BoxA")
+    print(f"Create box: {decode_return_value(box_return)}")
 
 
 def put_box(app_id: int):
     put_method = abi.Method.from_signature("put()void")
-    print("Write into a box...")
-    call_box_method(app_id, put_method, b"BoxA")
+    print(">> Write into a box...")
+    box_return = call_box_method(app_id, put_method, b"BoxA")
+    print(f"Returned box: {decode_return_value(box_return)}")
 
 
 def read_box(app_id: int):
     read_method = abi.Method.from_signature("read()void")
-    print("Read from a box...")
-    call_box_method(app_id, read_method, b"BoxA")
+    print(">> Read from a box...")
+    box_return = call_box_method(app_id, read_method, b"BoxA")
+    print(f"Returned box: {decode_return_value(box_return)}")
 
 
 def length_box(app_id: int):
     length_method = abi.Method.from_signature("length()void")
-    print("Get the length of a box...")
-    call_box_method(app_id, length_method, b"BoxA")
+    print(">> Get the length of a box...")
+    box_return = call_box_method(app_id, length_method, b"BoxA")
+    print(f"Length decoded {decode_return_value(box_return, isInt=True)}")
 
 
 def delete_box(app_id: int):
     delete_method = abi.Method.from_signature("delete()void")
-    print("Deleting a box...")
-    call_box_method(app_id, delete_method, b"BoxA")
+    print(">> Deleting a box...")
+    box_return = call_box_method(app_id, delete_method, b"BoxA")
+    print(f"Delete box success: {decode_return_value(box_return, isInt=True)}")
 
 
 if __name__ == "__main__":
     id = create_test_app()
     fund_program(id)
     create_box(id)
+    put_box(id)
     read_box(id)
     length_box(id)
+    delete_box(id)

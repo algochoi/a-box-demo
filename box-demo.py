@@ -80,9 +80,9 @@ def length() -> Expr:
 def delete() -> Expr:
     output = ScratchVar()
     return Seq(
-        App.box_put(
-            Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
-        ),
+        # App.box_put(
+        #     Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
+        # ),
         Log(Itob(App.box_delete(Bytes("BoxA")))),
     )
 
