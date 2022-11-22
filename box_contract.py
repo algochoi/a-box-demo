@@ -6,7 +6,6 @@ from pyteal import (
     abi,
     App,
     Approve,
-    Assert,
     BareCallActions,
     Bytes,
     CallConfig,
@@ -59,7 +58,6 @@ def read() -> Expr:
     return Seq(
         # App.box_put(Bytes("BoxA"), Bytes("Let's read some bytes")),
         boxint := App.box_get(Bytes("BoxA")),
-        Assert(boxint.hasValue()),
         Log(boxint.value()),
     )
 
@@ -72,7 +70,6 @@ def length() -> Expr:
         #     Bytes("BoxA"), Bytes("this is a test of a very very very very long string")
         # ),
         bt := App.box_length(Bytes("BoxA")),
-        Assert(bt.hasValue()),
         Log(Itob(bt.value())),
     )
 
