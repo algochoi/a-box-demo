@@ -1,5 +1,5 @@
 # A box demo
-Python SDK + PyTeal come together to do make some 🎁📦.
+Python SDK + PyTeal come together to make some 🎁📦.
 
 ### Installation
 
