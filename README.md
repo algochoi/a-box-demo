@@ -11,10 +11,10 @@ pip install -r requirements.txt
 
 ### Demo
 
-Uses [sandbox](https://github.com/algorand/sandbox):
+Uses [sandbox](https://github.com/algorand/sandbox) in dev mode:
 
 ```
-./sandbox up
+./sandbox up dev
 python box-demo.py # This will create the TEAL program: approve-box.teal
 python deploy_box.py
 ```
