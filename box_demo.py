@@ -2,8 +2,7 @@
 
 import base64
 
-from algosdk import abi, atomic_transaction_composer, logic
-from algosdk.future import transaction
+from algosdk import abi, atomic_transaction_composer, logic, transaction
 from algosdk.v2client import algod
 
 import sandbox_utils as sb

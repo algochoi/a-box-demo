@@ -19,7 +19,7 @@ from pyteal import (
     pragma,
 )
 
-pragma(compiler_version="^0.20.1")
+pragma(compiler_version="^0.21.0")
 
 CONTRACT_VERSION = 8
 
